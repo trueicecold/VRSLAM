@@ -25,6 +25,36 @@ namespace VRSLAM.Libs
             return logId;
         }
 
+        public static int Error(string message, int logId = -1)
+        {
+            if (logId == -1)
+            {
+                logId = GetNextLogId();
+            }
+            Shared.Window.SendWebMessage(JSON.Stringify(new
+            {
+                type = "html_log",
+                message = "<span class='fg-red'>" + message + "</span>",
+                logId = logId
+            }));
+            return logId;
+        }
+
+        public static int Success(string message, int logId = -1)
+        {
+            if (logId == -1)
+            {
+                logId = GetNextLogId();
+            }
+            Shared.Window.SendWebMessage(JSON.Stringify(new
+            {
+                type = "html_log",
+                message = "<span class='fg-green'>" + message + "</span>",
+                logId = logId
+            }));
+            return logId;
+        }
+
         static int GetNextLogId()
         {
             LOG_ID++;

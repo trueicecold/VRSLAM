@@ -29,7 +29,7 @@ const DynamicPageManager = {
       
       try {
         // Fetch HTML content
-        const htmlResponse = await fetch(`html://pages/${pageName}.html`);
+        const htmlResponse = await fetch((window.external.sendMessage) ? `html://pages/${pageName}.html` : `pages/${pageName}.html`);
         console.log(htmlResponse);
         if (!htmlResponse.ok) {
           throw new Error(`Failed to load HTML for page: ${pageName}`);
@@ -87,7 +87,7 @@ const DynamicPageManager = {
         // Load and execute the page's JavaScript
         try {
           // Fetch JS module
-          const jsResponse = await fetch(`js://assets/scripts/pages/${pageName}.js`);
+          const jsResponse = await fetch((window.external.sendMessage) ? `js://assets/scripts/pages/${pageName}.js` : `scripts/pages/${pageName}.js`);
           if (jsResponse.ok) {
             const jsCode = await jsResponse.text();
             
@@ -119,6 +119,19 @@ const DynamicPageManager = {
           }
         } catch (jsError) {
           console.error(`Error loading or executing JavaScript for ${pageName}:`, jsError);
+        }
+
+        // Load and execute the page's css
+        try {
+          const cssResponse = await fetch((window.external.sendMessage) ? `css://assets/styles/pages/${pageName}.css` : `assets/styles/pages/${pageName}.css`);
+          if (cssResponse.ok) {
+            const cssCode = await cssResponse.text();
+            const styleElement = document.createElement('style');
+            styleElement.textContent = cssCode;
+            $(this.container).append(styleElement);
+          }
+        } catch (cssError) {
+          console.error(`Error loading CSS for ${pageName}:`, cssError);
         }
         
         // Store the current page

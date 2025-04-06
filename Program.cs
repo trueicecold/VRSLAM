@@ -18,6 +18,10 @@ namespace VRSLAM
         {
             ADBManager.Start(); // Start the ADB manager to monitor devices
 
+            RClone rclone = new RClone(AppPath.VRSLAM_DIR + "/VRP.download.config"); // Initialize RClone with the config file path
+            rclone.Unmount(AppPath.RCLONE_MOUNT_DIR);
+            rclone.Mount("VRP-mirror01", "", AppPath.RCLONE_MOUNT_DIR, "--read-only --rc --rc-no-auth"); // Sync the remote with the local directory
+
             // Window title declared here for visibility
             string windowTitle = "VSLAM";
 
@@ -57,12 +61,28 @@ namespace VRSLAM
                 }
             });
 
+            Shared.Window.RegisterCustomSchemeHandler("css", (object sender, string scheme, string url, out string contentType) =>
+            {
+                contentType = "text/css";
+                if (File.Exists(url.Replace("css://", "wwwroot/")))
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(File.ReadAllText(url.Replace("css://", "wwwroot/"))));
+                }
+                else
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(File.ReadAllText("wwwroot/assets/styles/pages/home.css")));
+                }
+            });
+
             Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
                 {
                     dynamic message = JSON.Parse(messageStr);
 
                     switch (message.action.ToString())
                     {
+                        case "check_dependencies":
+                            DependencyManager.CheckDependencies();
+                            break;
                         case "download_dependencies":
                             DependencyManager.Download();
                             break;

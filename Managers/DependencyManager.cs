@@ -15,32 +15,82 @@ namespace VRSLAM.Managers
             await DownloadPlatformTools();
             await DownloadAPKTool();
             await DownloadAPKSigner();
+            await DownloadRClone();
+            CheckDependencies();
         }
 
-        public void CheckDependency() {
-            if (!File.Exists(AppPath.TOOLS_DIR + "/jdk/bin/java"))
+        public static void CheckDependencies() {
+            List<object> dependencies = new List<object>();
+
+            if (File.Exists(AppPath.TOOLS_DIR + "/jdk/bin/java" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "")))
             {
-                HTMLLogger.Log("JDK not found");
-                DownloadJDK();
+                dependencies.Add(new {
+                    dependency = "JDK",
+                    found = true
+                });
             }
             else {
-                HTMLLogger.Log("JDK found");
+                dependencies.Add(new {
+                    dependency = "JDK",
+                    found = false
+                });
             }
-            if (!File.Exists(AppPath.TOOLS_DIR + "/platform-tools/adb"))
+            if (File.Exists(AppPath.TOOLS_DIR + "/platform-tools/adb" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "")))
             {
-                HTMLLogger.Log("Platform Tools not found");
-                DownloadPlatformTools();
+                dependencies.Add(new {
+                    dependency = "Platform Tools",
+                    found = true
+                });
             }
-            if (!File.Exists(AppPath.TOOLS_DIR + "/apktool.jar"))
+            else {
+                dependencies.Add(new {
+                    dependency = "Platform Tools",
+                    found = false
+                });
+            }
+            if (File.Exists(AppPath.TOOLS_DIR + "/apktool.jar"))
             {
-                HTMLLogger.Log("APKTool not found");
-                DownloadAPKTool();
+                dependencies.Add(new {
+                    dependency = "APKTool",
+                    found = true
+                });
             }
-            if (!File.Exists(AppPath.TOOLS_DIR + "/uber-apk-signer.jar"))
+            else {
+                dependencies.Add(new {
+                    dependency = "APKTool",
+                    found = false
+                });
+            }
+            if (File.Exists(AppPath.TOOLS_DIR + "/uber-apk-signer.jar"))
             {
-                HTMLLogger.Log("APK Signer not found");
-                DownloadAPKSigner();
+                dependencies.Add(new {
+                    dependency = "APK Signer",
+                    found = true
+                });
             }
+            else {
+                dependencies.Add(new {
+                    dependency = "APK Signer",
+                    found = false
+                });
+            }
+            if (File.Exists(AppPath.TOOLS_DIR + "/rclone" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "")))
+            {
+                dependencies.Add(new {
+                    dependency = "RClone",
+                    found = true
+                });
+            }
+            else {
+                dependencies.Add(new {
+                    dependency = "RClone",
+                    found = false
+                });
+            }
+            Shared.Window.SendWebMessage(JSON.Stringify(new {
+                type = "check_dependencies",
+                dependencies = dependencies
+            }));
         }
 
         static async Task DownloadJDK()
@@ -157,6 +207,37 @@ namespace VRSLAM.Managers
                     HTMLLogger.Log("Downloading APK Signer... Error: " + e.StatusCode, logId);
                 };
                 await downloader.DownloadFileAsync(apkSignerUrl, apkSignerPath);
+            }
+        }
+
+        static async Task DownloadRClone() {
+            string rcloneUrl = AppPath.RCLONE_URL;
+            string rclonePath = AppPath.TOOLS_DIR + "/rclone.zip";
+            string rcloneFile = AppPath.TOOLS_DIR + "/rclone" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "");
+            if (!File.Exists(rcloneFile))
+            {
+                int logId = HTMLLogger.Log("Downloading RClone...");
+                FileDownloader downloader = new FileDownloader();
+                downloader.ProgressChanged += (sender, e) =>
+                {
+                    HTMLLogger.Log("Downloading RClone... " + e.ProgressPercentage + "%", logId);
+                };
+                downloader.DownloadCompleted += (sender, e) =>
+                {
+                    HTMLLogger.Log("Downloading RClone... Done", logId);
+                    System.IO.Compression.ZipFile.ExtractToDirectory(rclonePath, AppPath.TOOLS_DIR + "/rclone", true);
+                    var directories = Directory.GetDirectories(AppPath.TOOLS_DIR + "/rclone").ToList();
+                    Directory.Move(directories[0], AppPath.TOOLS_DIR + "/rclone_tmp");
+                    Directory.Delete(AppPath.TOOLS_DIR + "/rclone", true);
+                    Directory.Move(AppPath.TOOLS_DIR + "/rclone_tmp", AppPath.TOOLS_DIR + "/rclone");
+                    File.Delete(rclonePath);
+                    HTMLLogger.Log("Extracting RClone... Done", logId);
+                };
+                downloader.Error += (sender, e) =>
+                {
+                    HTMLLogger.Log("Downloading RClone... Error: " + e.StatusCode, logId);
+                };
+                await downloader.DownloadFileAsync(rcloneUrl, rclonePath);
             }
         }
     }

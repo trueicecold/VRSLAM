@@ -8,10 +8,11 @@ namespace VRSLAM.Libs
     public class AppPath
     {
         public static string HOME_DIR = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        public static string MRVR_DIR = HOME_DIR + "/VRSLAM";
-        public static string TOOLS_DIR = MRVR_DIR + "/tools";
-        public static string TMP_DIR = MRVR_DIR + "/tmp";
-        public static string OUTPUT_DIR = MRVR_DIR + "/output";
+        public static string VRSLAM_DIR = HOME_DIR + "/VRSLAM";
+        public static string TOOLS_DIR = VRSLAM_DIR + "/tools";
+        public static string TMP_DIR = VRSLAM_DIR + "/tmp";
+        public static string OUTPUT_DIR = VRSLAM_DIR + "/output";
+        public static string RCLONE_MOUNT_DIR = Path.GetTempPath() + "/mnt/VRSLAM";
 
         public static bool IS_MAC_64 = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX) && 
             System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.X64;
@@ -43,10 +44,19 @@ namespace VRSLAM.Libs
             IS_MAC_ARM64 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-darwin.zip" :
             IS_LINUX_32 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-linux.zip" :
             IS_LINUX_64 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-linux.zip" : "";
+
+        public static string RCLONE_URL = 
+            IS_WINDOWS_32 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-windows-386.zip" :
+            IS_WINDOWS_64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-windows-amd64.zip" :
+            IS_MAC_64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-osx-amd64.zip" :
+            IS_MAC_ARM64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-osx-arm64.zip" :
+            IS_LINUX_32 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-linux-386.zip" :
+            IS_LINUX_64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-linux-amd64.zip" : "";
         
         public static string PLATFORM_TOOLS = TOOLS_DIR + "/platform-tools";
         public static string APKTOOL_PATH = TOOLS_DIR + "/apktool.jar";
         public static string JDK_PATH = TOOLS_DIR + "/jdk/bin/java";
         public static string UBER_APK_SIGNER_PATH = TOOLS_DIR + "/uber-apk-signer.jar";
+        public static string RCLONE_PATH = TOOLS_DIR + "/rclone/rclone";
     }
 }

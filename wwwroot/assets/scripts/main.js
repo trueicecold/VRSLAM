@@ -1,14 +1,14 @@
 $(document).ready(function () {
     DynamicPageManager.init('page_content');
-    sendMessage(JSON.stringify({
-        action: "download_dependencies"
-    }));
     DynamicPageManager.loadPage(location.hash.substring(1));
     //drawPage(location.hash.substring(1));
 
     receiveMessage(message => {
         const data = JSON.parse(message);
         switch (data.type) {
+            case "check_dependencies":
+                onCheckDependencies(data.dependencies);
+                break;
             case "html_log":
                 Logger.log(data.message, data.logId);
                 break;

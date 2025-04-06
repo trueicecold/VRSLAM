@@ -14,6 +14,8 @@ namespace VRSLAM.Libs
     public class APKFixer
     {
         static string fileName = "";
+        static string packageName = "";
+        static string newPackageName = "";
         static string folderPath = "";
         static string apkPath = "";
         public static async Task Fix(string _apkPath)
@@ -22,11 +24,22 @@ namespace VRSLAM.Libs
             fileName = Path.GetFileNameWithoutExtension(apkPath);
             folderPath = Path.GetDirectoryName(apkPath);
             
+            bool isOK = true;
+
             DeleteFolders();
-            await UnpackAPK();
-            await ReplacePackageName();
-            await PackAPK();
-            await SignAPK();
+            isOK = await UnpackAPK();
+            if (!isOK) return;
+            isOK = await ReplacePackageName();
+            if (!isOK) return;
+            isOK = await PackAPK();
+            if (!isOK) return;
+            isOK = await SignAPK();
+            if (isOK) {
+                HTMLLogger.Success("APK Renamed Successfully");
+            }
+            else {
+                HTMLLogger.Error("APK Renaming Failed");
+            }
         }
 
         static void DeleteFolders() {
@@ -39,9 +52,9 @@ namespace VRSLAM.Libs
             }
         }
 
-        static async Task UnpackAPK()
+        static async Task<bool> UnpackAPK()
         {
-            HTMLLogger.Log("Unpacking APK...");
+            int logId = HTMLLogger.Log("Unpacking APK...");
             var process = new Process {
                 StartInfo = new ProcessStartInfo
                 {
@@ -54,152 +67,178 @@ namespace VRSLAM.Libs
             };
 
             process.Start();
-            /*while (!process.StandardOutput.EndOfStream)
-            {
-                string line = process.StandardOutput.ReadLine();
-                Console.WriteLine(line);
-            }*/
             await process.WaitForExitAsync();
-            process.Close();
+            if (process.ExitCode != 0)
+            {
+                HTMLLogger.Log("Unpacking APK... Error: " + process.ExitCode, logId);
+                return false;
+            }
+            else
+            {
+                HTMLLogger.Log("Unpacking APK... Done", logId);
+                process.Close();
+                return true;
+            }
         }
 
-        static async Task ReplacePackageName()
+        static async Task<bool> ReplacePackageName()
         {
             HTMLLogger.Log("Replacing Package Name...");
-            string manifestPath = AppPath.TMP_DIR + "/" + fileName + "/source/AndroidManifest.xml";
-            string manifestContent = File.ReadAllText(manifestPath);
-            
-            string packageName = manifestContent.Split("package=\"")[1].Split("\"")[0];
-            string packageNameSmali = packageName.Replace(".", "/");
-            
-            List<string> packageNameSplit = packageName.Split('.').ToList();
-            packageNameSplit.Insert(1, "mrf");
-            
-            string newPackageName = string.Join(".", packageNameSplit);
-            string newPackageNameSmali = string.Join("/", packageNameSplit);
+            try {
+                string manifestPath = AppPath.TMP_DIR + "/" + fileName + "/source/AndroidManifest.xml";
+                string manifestContent = File.ReadAllText(manifestPath);
+                
+                packageName = manifestContent.Split("package=\"")[1].Split("\"")[0];
+                string packageNameSmali = packageName.Replace(".", "/");
+                
+                List<string> packageNameSplit = packageName.Split('.').ToList();
+                packageNameSplit.Insert(1, "mrf");
+                
+                newPackageName = string.Join(".", packageNameSplit);
+                string newPackageNameSmali = string.Join("/", packageNameSplit);
 
-            //Replace occurunces of old package name in all relevant files
-            string[] files = Directory.GetFiles(AppPath.TMP_DIR + "/" + fileName + "/source", "*", SearchOption.AllDirectories);
-            foreach (string file in files)
-            {
-                if (file.EndsWith(".smali"))
+                //Replace occurunces of old package name in all relevant files
+                string[] files = Directory.GetFiles(AppPath.TMP_DIR + "/" + fileName + "/source", "*", SearchOption.AllDirectories);
+                foreach (string file in files)
                 {
-                    string fileContent = File.ReadAllText(file);
-                    if (fileContent.Contains(packageNameSmali))
+                    if (file.EndsWith(".smali"))
                     {
-                        Console.WriteLine("Replacing package name in: " + file);
+                        string fileContent = File.ReadAllText(file);
+                        if (fileContent.Contains(packageNameSmali))
+                        {
+                            Console.WriteLine("Replacing package name in: " + file);
+                            fileContent = fileContent.Replace(packageNameSmali, newPackageNameSmali);
+                        }
+                        if (fileContent.Contains(packageName))
+                        {
+                            Console.WriteLine("Replacing package name in: " + file);
+                            fileContent = fileContent.Replace(packageName, newPackageName);
+                        }
                         fileContent = fileContent.Replace(packageNameSmali, newPackageNameSmali);
+                        File.WriteAllText(file, fileContent);
                     }
-                    if (fileContent.Contains(packageName))
+                    else if (file.EndsWith(".xml"))
                     {
-                        Console.WriteLine("Replacing package name in: " + file);
-                        fileContent = fileContent.Replace(packageName, newPackageName);
+                        string fileContent = File.ReadAllText(file);
+                        if (fileContent.Contains(packageName))
+                        {
+                            Console.WriteLine("Replacing package name in: " + file);
+                            fileContent = fileContent.Replace(packageName, newPackageName);
+                        }
+                        File.WriteAllText(file, fileContent);
                     }
-                    fileContent = fileContent.Replace(packageNameSmali, newPackageNameSmali);
-                    File.WriteAllText(file, fileContent);
                 }
-                else if (file.EndsWith(".xml"))
+                
+                //Change folder structure to match new package name
+                Directory.CreateDirectory(AppPath.TMP_DIR + "/" + fileName + "/source/smali/" + packageNameSplit[0] + "/mrf");
+                Directory.Move(AppPath.TMP_DIR + "/" + fileName + "/source/smali/" + packageNameSplit[0] + "/" + packageNameSplit[2], AppPath.TMP_DIR + "/" + fileName + "/source/smali/" + packageNameSplit[0] + "/mrf/" + packageNameSplit[2]);
+
+                HTMLLogger.Log("Replacing OBB Files...");
+                if (Directory.Exists(folderPath + "/obb"))
                 {
-                    string fileContent = File.ReadAllText(file);
-                    if (fileContent.Contains(packageName))
+                    Directory.CreateDirectory(AppPath.OUTPUT_DIR + "/" + fileName + "/obb");
+                    //Copy obb contents to new location and change file name to new package name
+                    string[] obbFiles = Directory.GetFiles(folderPath + "/obb", "*", SearchOption.AllDirectories);
+                    foreach (string obbFile in obbFiles)
                     {
-                        Console.WriteLine("Replacing package name in: " + file);
-                        fileContent = fileContent.Replace(packageName, newPackageName);
+                        string obbFileName = obbFile.Split('/').Last();
+                        string newObbFileName = obbFileName.Replace(packageName, newPackageName);
+                        File.Copy(obbFile, AppPath.OUTPUT_DIR + "/" + fileName + "/obb/" + newObbFileName);
                     }
-                    File.WriteAllText(file, fileContent);
                 }
             }
-            
-            //Change folder structure to match new package name
-            Directory.CreateDirectory(AppPath.TMP_DIR + "/" + fileName + "/source/smali/" + packageNameSplit[0] + "/mrf");
-            Directory.Move(AppPath.TMP_DIR + "/" + fileName + "/source/smali/" + packageNameSplit[0] + "/" + packageNameSplit[2], AppPath.TMP_DIR + "/" + fileName + "/source/smali/" + packageNameSplit[0] + "/mrf/" + packageNameSplit[2]);
-
-            HTMLLogger.Log("Replacing OBB Files...");
-            if (Directory.Exists(folderPath + "/obb"))
+            catch (Exception e)
             {
-                Directory.CreateDirectory(AppPath.OUTPUT_DIR + "/" + fileName + "/obb");
-                //Copy obb contents to new location and change file name to new package name
-                string[] obbFiles = Directory.GetFiles(folderPath + "/obb", "*", SearchOption.AllDirectories);
-                foreach (string obbFile in obbFiles)
+                HTMLLogger.Error("Replacing Package Name... Error: " + e.Message);
+                return false;
+            }
+            return true;
+        }
+
+        static async Task<bool> PackAPK() {
+            int logId = HTMLLogger.Log("Packing APK...");
+            try {
+                if (Directory.Exists(AppPath.TMP_DIR + "/" + fileName))
                 {
-                    string obbFileName = obbFile.Split('/').Last();
-                    string newObbFileName = obbFileName.Replace(packageName, newPackageName);
-                    File.Copy(obbFile, AppPath.OUTPUT_DIR + "/" + fileName + "/obb/" + newObbFileName);
+                    var process = new Process {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = AppPath.JDK_PATH,
+                            Arguments = " -jar " + AppPath.APKTOOL_PATH + " -f b \"" + AppPath.TMP_DIR + "/" + fileName + "/source\" -o \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk\"",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            CreateNoWindow = true
+                        }
+                    };
+
+                    process.Start();
+                    await process.WaitForExitAsync();
+                    if (process.ExitCode != 0)
+                    {
+                        HTMLLogger.Error("Packing APK... Error: " + process.ExitCode, logId);
+                        process.Close();
+                        return false;
+                    }
+                    else
+                    {
+                        HTMLLogger.Log("Packing APK... Done", logId);
+                        process.Close();
+                        return true;
+                    }
                 }
+                else {
+                    HTMLLogger.Error("Packing APK... Error: Cannot Find Target Directory", logId);
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                HTMLLogger.Error("Packing APK... Error: " + e.Message, logId);
+                return false;
             }
         }
 
-        static async Task PackAPK() {
-            HTMLLogger.Log("Packing APK...");
-            if (Directory.Exists(AppPath.TMP_DIR + "/" + fileName))
-            {
+        static async Task<bool> SignAPK() {
+            int logId = HTMLLogger.Log("Signing APK...");
+            try {
                 var process = new Process {
                     StartInfo = new ProcessStartInfo
-                    {
-                        FileName = AppPath.JDK_PATH,
-                        Arguments = " -jar " + AppPath.APKTOOL_PATH + " -f b \"" + AppPath.TMP_DIR + "/" + fileName + "/source\" -o \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    }
+                        {
+                            FileName = AppPath.JDK_PATH,
+                            Arguments = " -jar " + AppPath.UBER_APK_SIGNER_PATH + " -a \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk\" -o \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/fixed",
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            CreateNoWindow = true
+                        }
                 };
 
                 process.Start();
-                /*while (!process.StandardOutput.EndOfStream)
-                {
-                    string line = process.StandardOutput.ReadLine();
-                    Console.WriteLine(line);
-                }*/
                 await process.WaitForExitAsync();
-                process.Close();
-            }
-        }
 
-        static async Task SignAPK() {
-            int logId = HTMLLogger.Log("Signing APK...");
-            Console.WriteLine(AppPath.JDK_PATH + " -jar " + AppPath.UBER_APK_SIGNER_PATH + " -a \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk\" -o \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".fixed.apk\"");
-
-            var process = new Process {
-                StartInfo = new ProcessStartInfo
-                    {
-                        FileName = AppPath.JDK_PATH,
-                        Arguments = " -jar " + AppPath.UBER_APK_SIGNER_PATH + " -a \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk\" -o \"" + AppPath.OUTPUT_DIR + "/" + fileName + "/fixed",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    }
-            };
-            /*process.OutputDataReceived += new DataReceivedEventHandler ((sender, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                {
-                    Console.WriteLine(e.Data);
-                }
-            });*/
-            process.Exited += new EventHandler ((sender, e) =>
-            {
                 if (process.ExitCode != 0)
                 {
-                    HTMLLogger.Log("Signing APK... Error: " + process.ExitCode, logId);
+                    HTMLLogger.Error("Signing APK... Error: " + process.ExitCode, logId);
+                    process.Close();
+                    return false;
                 }
                 else
                 {
+                    process.Close();
                     HTMLLogger.Log("Signing APK... Done", logId);
-                    HTMLLogger.Log("APK fixed and signed: " + AppPath.OUTPUT_DIR + "/" + fileName + "/fixed.apk", logId);
+                    //Move the fixed APK to the output folder
+                    File.Move(AppPath.OUTPUT_DIR + "/" + fileName + "/fixed/" + fileName + "-aligned-debugSigned.apk", AppPath.OUTPUT_DIR + "/" + fileName + "/" + newPackageName + ".apk");
+                    Directory.Delete(AppPath.OUTPUT_DIR + "/" + fileName + "/fixed", true);
+                    //Delete the original APK
+                    File.Delete(AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk");
+                    HTMLLogger.Log("Renamed APK Exported To:<br/>" + AppPath.OUTPUT_DIR + "/" + fileName + "/", logId);
+                    return true;
                 }
-                process.Close();
-                Console.WriteLine("Process exited.");
-            });
-            process.Start();
-            process.BeginOutputReadLine();
-            await process.WaitForExitAsync();
-        /*while (!process.StandardOutput.EndOfStream)
-        {
-            string line = process.StandardOutput.ReadLine();
-            Console.WriteLine(line);
-        }*/
-        //process.WaitForExit();
-        //process.Close();
+            }
+            catch (Exception e)
+            {
+                HTMLLogger.Error("Signing APK... Error: " + e.Message, logId);
+                return false;
+            }
         }
     }
 }
