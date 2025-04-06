@@ -5,10 +5,10 @@ const ADBManager  = {
                 const data = JSON.parse(message);
                 switch (data.type) {
                     case "device_connected":
-                        onDeviceConnected(data.device, data.info);
+                        ADBManager.onDeviceConnected(data.device, data.info);
                         break;
                     case "device_disconnected":
-                        onDeviceDisconnected();
+                        ADBManager.onDeviceDisconnected();
                         break;
                 }
             });
@@ -19,6 +19,7 @@ const ADBManager  = {
 
     onDeviceConnected: (device, info) => {
         try {
+            console.log(device);
             if (device) {
                 if (info) {
                     info = JSON.parse(info);
@@ -32,6 +33,7 @@ const ADBManager  = {
         }
     },
     onDeviceDisconnected: () => {
+        console.log("Disconnected");
         $("#device_status").removeClass("bg-green").addClass("bg-charcoal").html("Not Connected");
         $("#device_storage_container").addClass("d-none").removeClass("d-flex");
     }

@@ -5,6 +5,10 @@ $(document).ready(function () {
     // Initialize the page manager
     PageManager.init('page_content');
     PageManager.loadPage(location.hash.substring(1) || "home");
+
+    sendMessage(JSON.stringify({
+        action: "init_managers"
+    }));
 });
 
 onhashchange = () => {

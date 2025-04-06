@@ -70,11 +70,20 @@ namespace VRSLAM
 
             Shared.Window.Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
 
-            // Init managers interop handlers
-            DependencyManager.InitHandlers();
-            APKManager.InitHandlers();
-            ADBManager.InitHandlers();
-            RCloneManager.InitHandlers();
+            Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
+                {
+                    dynamic message = JSON.Parse(messageStr);
+
+                    switch (message.action.ToString()) {
+                        case "init_managers":
+                            // Init managers interop handlers
+                            DependencyManager.InitHandlers();
+                            APKManager.InitHandlers();
+                            ADBManager.InitHandlers();
+                            RCloneManager.InitHandlers();
+                            break;
+                    }
+                });
 
             Shared.Window.WaitForClose(); // Starts the application event loop
         }
