@@ -12,31 +12,31 @@
     <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
 
     <link rel="stylesheet" href="assets/styles/main.css" />
-    <script src="assets/scripts/managers/page.js"></script>
     <script src="assets/scripts/main.js"></script>
-    <script src="assets/scripts/logger.js"></script>
+    <script src="assets/scripts/managers/page.js"></script>
+    <script src="assets/scripts/managers/logger.js"></script>
     <script src="assets/scripts/managers/adb.js"></script>
 </head>
 <body class="h-100">
     <div class="d-flex flex-row h-100">
-        <ul class="sidenav-simple sidenav-simple-expand-fs h-100">
-            <li><a href="#home">
+        <ul class="sidenav-simple sidenav-simple-expand-fs h-100" id="sidenav">
+            <li data-page="home"><a href="#home">
                 <span class="mif-apps icon"></span>
                 <span class="title">Home</span>
             </a></li>
-            <li><a href="#local_browse">
+            <li data-page="local_browse"><a href="#local_browse">
                 <span class="mif-apps icon"></span>
                 <span class="title">Local Browse</span>
             </a></li>
-            <li><a href="#remote_browse">
+            <li data-page="remote_browse"><a href="#remote_browse">
                 <span class="mif-net-server icon"></span>
                 <span class="title">Remote Browse</span>
             </a></li>
-            <li class="active"><a href="#apk_renamer">
+            <li  data-page="apk_renamer"><a href="#apk_renamer">
                 <span class="mif-loop icon"></span>
                 <span class="title">APK Renamer</span>
             </a></li>
-            <li><a href="#settings">
+            <li data-page="settings"><a href="#settings">
                 <span class="mif-cog icon"></span>
                 <span class="title">Settings</span>
             </a></li>
@@ -47,8 +47,8 @@
                 </div>
             </div>
             <div class="footer d-flex w-100 flex-row pl-3 pr-3">
-                <div>ADB Status:</div>
-                <div class="ml-3" id="device_status">Not Connected</div>
+                <div class="bg-charcoal fg-white ml-3" id="device_status">Not Connected</div>
+                <div class="ml-3" id="mount_status"></div>
                 <div class="d-flex flex-grow-1 ml-auto" id="device_storage_container">
                     <div>Storage:</div>
                     <div class="ml-3" id="device_storage"></div>

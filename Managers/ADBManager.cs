@@ -7,10 +7,31 @@ using VRSLAM.Libs;
 
 namespace VRSLAM.Managers
 {
-    public class ADBManager
+    public class ADBManager: Handler
     {
         static string DeviceID = null;
         static Dictionary<string, object> DeviceInfo = null;
+
+        public static void InitHandlers() {
+            Start();
+            /*Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
+                {
+                    dynamic message = JSON.Parse(messageStr);
+
+                    switch (message.action.ToString())
+                    {
+                        case "adb_install_apk":
+                            Shared.AdbToolkit.InstallApk(message.filePath.ToString());
+                            break;
+                        case "adb_uninstall_apk":
+                            Shared.AdbToolkit.UninstallApk(message.packageName.ToString());
+                            break;
+                        default:
+                            break;
+                    }
+                });*/
+        }
+
         public static void Start() {
             Shared.AdbToolkit = new AdbToolkit(AppPath.PLATFORM_TOOLS_URL + "/adb", true, true);
             Shared.AdbToolkit.DeviceConnected += (sender, device) => {

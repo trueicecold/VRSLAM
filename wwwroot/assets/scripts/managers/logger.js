@@ -1,4 +1,15 @@
 const Logger = {
+    init: () => {
+        receiveMessage(message => {
+            const data = JSON.parse(message);
+            switch (data.type) {
+                case "html_log":
+                    log(data.message, data.logId);
+                    break;
+            }
+        });
+    },
+
     log: function (message, logId) {
         const logElement = $("#logger");
         if (logId && $(`#log_line_${logId}`).length > 0) {

@@ -16,12 +16,6 @@ namespace VRSLAM
         [STAThread]
         static void Main(string[] args)
         {
-            ADBManager.Start(); // Start the ADB manager to monitor devices
-
-            RClone rclone = new RClone(AppPath.VRSLAM_DIR + "/VRP.download.config"); // Initialize RClone with the config file path
-            rclone.Unmount(AppPath.RCLONE_MOUNT_DIR);
-            rclone.Mount("VRP-mirror01", "", AppPath.RCLONE_MOUNT_DIR, "--read-only --rc --rc-no-auth"); // Sync the remote with the local directory
-
             // Window title declared here for visibility
             string windowTitle = "VSLAM";
 
@@ -74,41 +68,15 @@ namespace VRSLAM
                 }
             });
 
-            Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
-                {
-                    dynamic message = JSON.Parse(messageStr);
+            Shared.Window.Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
 
-                    switch (message.action.ToString())
-                    {
-                        case "check_dependencies":
-                            DependencyManager.CheckDependencies();
-                            break;
-                        case "download_dependencies":
-                            DependencyManager.Download();
-                            break;
-                        case "choose_apk":
-                            string[] files = Shared.Window.ShowOpenFile(
-                                title: "Open a file",
-                                defaultPath: Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                                multiSelect: false,
-                                filters: [
-                                    ("APK Files", new [] {"*.apk"})
-                                ]
-                            );
-                            Shared.Window.SendWebMessage(JSON.Stringify(new {
-                                type = "choose_apk",
-                                files = files
-                            }));
-                            break;
-                        case "fix_apk":
-                            APKFixer.Fix(message.filePath.ToString());
-                            break;
-                        default:
-                            break;
-                    }
-                })
-                .Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
-                Shared.Window.WaitForClose(); // Starts the application event loop
+            // Init managers interop handlers
+            DependencyManager.InitHandlers();
+            APKManager.InitHandlers();
+            ADBManager.InitHandlers();
+            RCloneManager.InitHandlers();
+
+            Shared.Window.WaitForClose(); // Starts the application event loop
         }
     }
 }

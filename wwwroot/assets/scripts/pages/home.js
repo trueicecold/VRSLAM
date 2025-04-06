@@ -1,4 +1,13 @@
-function init() {
+const init = () => {
+    receiveMessage(message => {
+        const data = JSON.parse(message);
+        switch (data.type) {
+            case "check_dependencies":
+                onCheckDependencies(data.dependencies);
+                break;
+        }
+    });
+    
     sendMessage(JSON.stringify({
         action: "check_dependencies"
     }));

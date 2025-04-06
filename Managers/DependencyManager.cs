@@ -7,7 +7,7 @@ using VRSLAM.Libs;
 
 namespace VRSLAM.Managers
 {
-    public class DependencyManager
+    public class DependencyManager: Handler
     {
         public static async Task Download()
         {
@@ -16,10 +16,29 @@ namespace VRSLAM.Managers
             await DownloadAPKTool();
             await DownloadAPKSigner();
             await DownloadRClone();
-            CheckDependencies();
+            Check();
         }
 
-        public static void CheckDependencies() {
+        public static void InitHandlers() {
+            Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
+                {
+                    dynamic message = JSON.Parse(messageStr);
+
+                    switch (message.action.ToString())
+                    {
+                        case "check_dependencies":
+                            Check();
+                            break;
+                        case "download_dependencies":
+                            Download();
+                            break;
+                        default:
+                            break;
+                    }
+                });
+        }
+
+        public static void Check() {
             List<object> dependencies = new List<object>();
 
             if (File.Exists(AppPath.TOOLS_DIR + "/jdk/bin/java" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "")))
@@ -74,7 +93,7 @@ namespace VRSLAM.Managers
                     found = false
                 });
             }
-            if (File.Exists(AppPath.TOOLS_DIR + "/rclone" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "")))
+            if (File.Exists(AppPath.TOOLS_DIR + "/rclone/rclone" + (AppPath.IS_WINDOWS_32 || AppPath.IS_WINDOWS_64 ? ".exe" : "")))
             {
                 dependencies.Add(new {
                     dependency = "RClone",

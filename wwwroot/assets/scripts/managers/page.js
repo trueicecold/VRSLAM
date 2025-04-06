@@ -5,7 +5,7 @@
  * - Auto-cleans resources
  */
 
-const DynamicPageManager = {
+const PageManager = {
     // Current page context
     current: null,
     
@@ -24,13 +24,15 @@ const DynamicPageManager = {
     
     // Load a page dynamically
     async loadPage(pageName) {
+      $("#sidenav li.active").removeClass("active");
+      $("#sidenav li[data-page=" + pageName + "]").addClass("active");
+
       // Clean up previous page if any
       await this.unloadCurrentPage();
       
       try {
         // Fetch HTML content
         const htmlResponse = await fetch((window.external.sendMessage) ? `html://pages/${pageName}.html` : `pages/${pageName}.html`);
-        console.log(htmlResponse);
         if (!htmlResponse.ok) {
           throw new Error(`Failed to load HTML for page: ${pageName}`);
         }

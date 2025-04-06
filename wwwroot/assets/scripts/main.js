@@ -1,54 +1,14 @@
 $(document).ready(function () {
-    DynamicPageManager.init('page_content');
-    DynamicPageManager.loadPage(location.hash.substring(1));
-    //drawPage(location.hash.substring(1));
+    Logger.init();
+    ADBManager.init();
 
-    receiveMessage(message => {
-        const data = JSON.parse(message);
-        switch (data.type) {
-            case "check_dependencies":
-                onCheckDependencies(data.dependencies);
-                break;
-            case "html_log":
-                Logger.log(data.message, data.logId);
-                break;
-            case "choose_apk":
-                if (data.files && data.files.length > 0) {
-                    selectedFile = data.files[0];
-                    $("#selectedFile").val(selectedFile || "");
-                }
-                break;
-            case "device_connected":
-                ADBManager.onDeviceConnected(data.device, data.info);
-                break;
-            case "device_disconnected":
-                ADBManager.onDeviceDisconnected();
-                break;
-        }
-    });
+    // Initialize the page manager
+    PageManager.init('page_content');
+    PageManager.loadPage(location.hash.substring(1) || "home");
 });
 
-let selectedFile = null;
-function chooseAPK() {
-    sendMessage(JSON.stringify({ 
-        action: "choose_apk"
-    }));
-}
-
-function fixAPK() {
-    if (selectedFile) {
-        sendMessage(JSON.stringify({
-            action: "fix_apk",
-            filePath: selectedFile
-        }));
-    }
-    else {
-        alert("Please select an APK file first.");
-    }
-}
-
 onhashchange = () => {
-    DynamicPageManager.loadPage(location.hash.substring(1));
+    PageManager.loadPage(location.hash.substring(1));
 };
 
 const sendMessage = (message) => {

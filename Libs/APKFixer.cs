@@ -18,7 +18,8 @@ namespace VRSLAM.Libs
         static string newPackageName = "";
         static string folderPath = "";
         static string apkPath = "";
-        public static async Task Fix(string _apkPath)
+        static string newApkPath = "";
+        public static async Task Rename(string _apkPath)
         {
             apkPath = _apkPath;
             fileName = Path.GetFileNameWithoutExtension(apkPath);
@@ -35,7 +36,11 @@ namespace VRSLAM.Libs
             if (!isOK) return;
             isOK = await SignAPK();
             if (isOK) {
-                HTMLLogger.Success("APK Renamed Successfully");
+                HTMLLogger.Success("APK Renamed Successfully <button class='button info' onclick='installRenamedAPK();'>Install Fixed APK</button>");
+                Shared.Window.SendWebMessage(JSON.Stringify(new {
+                    type = "apk_renamed",
+                    filePath = newApkPath
+                }));
             }
             else {
                 HTMLLogger.Error("APK Renaming Failed");
@@ -231,6 +236,7 @@ namespace VRSLAM.Libs
                     //Delete the original APK
                     File.Delete(AppPath.OUTPUT_DIR + "/" + fileName + "/" + fileName + ".apk");
                     HTMLLogger.Log("Renamed APK Exported To:<br/>" + AppPath.OUTPUT_DIR + "/" + fileName + "/", logId);
+                    newApkPath = AppPath.OUTPUT_DIR + "/" + fileName + "/" + newPackageName + ".apk";
                     return true;
                 }
             }
