@@ -1,0 +1,16 @@
+﻿<div class="header">APK Renamer</div>
+<!-- File Selection -->
+<div class="file_choose_container d-flex justify-content-center pb-3">
+    <input type="text" data-role="input" id="selectedFile" class="mr-3" placeholder="APK Path" readonly/>
+    <button class="file_browse button secondary small" onclick="chooseAPK();">Browse...</button>
+    <button class="button info" onclick="fixAPK();">Fix APK</button>
+</div>
+
+<!-- Logger (takes remaining space) -->
+<div class="flex-grow-1 d-flex h-100">
+    <div class="d-flex justify-content-center align-items-center w-100">
+        <div class="log p-3 w-100" id="logger">
+            <!-- Log messages will appear here -->
+        </div>
+    </div>
+</div> 

@@ -1,19 +1,43 @@
 $(document).ready(function () {
-    window.external.sendMessage(JSON.stringify({
+    DynamicPageManager.init('page_content');
+    sendMessage(JSON.stringify({
         action: "download_dependencies"
     }));
+    DynamicPageManager.loadPage(location.hash.substring(1));
+    //drawPage(location.hash.substring(1));
+
+    receiveMessage(message => {
+        const data = JSON.parse(message);
+        switch (data.type) {
+            case "html_log":
+                Logger.log(data.message, data.logId);
+                break;
+            case "choose_apk":
+                if (data.files && data.files.length > 0) {
+                    selectedFile = data.files[0];
+                    $("#selectedFile").val(selectedFile || "");
+                }
+                break;
+            case "device_connected":
+                ADBManager.onDeviceConnected(data.device, data.info);
+                break;
+            case "device_disconnected":
+                ADBManager.onDeviceDisconnected();
+                break;
+        }
+    });
 });
 
 let selectedFile = null;
 function chooseAPK() {
-    window.external.sendMessage(JSON.stringify({ 
+    sendMessage(JSON.stringify({ 
         action: "choose_apk"
     }));
 }
 
 function fixAPK() {
     if (selectedFile) {
-        window.external.sendMessage(JSON.stringify({
+        sendMessage(JSON.stringify({
             action: "fix_apk",
             filePath: selectedFile
         }));
@@ -23,23 +47,24 @@ function fixAPK() {
     }
 }
 
-window.external.receiveMessage(message => {
-    const data = JSON.parse(message);
-    switch (data.type) {
-        case "html_log":
-            Logger.log(data.message, data.logId);
-            break;
-        case "choose_apk":
-            if (data.files && data.files.length > 0) {
-                selectedFile = data.files[0];
-                $("#selectedFile").val(selectedFile || "");
-            }
-            break;
-        case "device_connected":
-            ADBManager.onDeviceConnected(data.device, data.info);
-            break;
-        case "device_disconnected":
-            ADBManager.onDeviceDisconnected();
-            break;
+onhashchange = () => {
+    DynamicPageManager.loadPage(location.hash.substring(1));
+};
+
+const sendMessage = (message) => {
+    if (window.external && window.external.sendMessage) {
+        window.external.sendMessage(message);
     }
-});
+    else {
+        console.warn("sendMessage is not defined");
+    }
+}
+
+const receiveMessage = (callback) => {
+    if (window.external && window.external.receiveMessage) {
+        window.external.receiveMessage(callback);
+    }
+    else {
+        console.warn("receiveMessage is not defined");
+    }
+}

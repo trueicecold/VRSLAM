@@ -23,12 +23,39 @@ namespace VRSLAM
 
             // Creating a new PhotinoWindow instance with the fluent API
             Shared.Window = new PhotinoWindow()
+                .SetWebSecurityEnabled(false)
                 .SetTitle(windowTitle)
                 .SetSize(new Size(800, 600))
                 .Center()
                 .SetResizable(true)
                 .SetMaxSize(1600, 900)
                 .SetMinSize(800, 600);
+
+            Shared.Window.RegisterCustomSchemeHandler("html", (object sender, string scheme, string url, out string contentType) =>
+            {
+                contentType = "text/html";
+                if (File.Exists(url.Replace("html://", "wwwroot/")))
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(File.ReadAllText(url.Replace("html://", "wwwroot/"))));
+                }
+                else
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(File.ReadAllText("wwwroot/pages/home.html")));
+                }
+            });
+
+            Shared.Window.RegisterCustomSchemeHandler("js", (object sender, string scheme, string url, out string contentType) =>
+            {
+                contentType = "text/javascript";
+                if (File.Exists(url.Replace("js://", "wwwroot/")))
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(File.ReadAllText(url.Replace("js://", "wwwroot/"))));
+                }
+                else
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(File.ReadAllText("wwwroot/assets/scripts/pages/home.js")));
+                }
+            });
 
             Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
                 {
@@ -37,7 +64,7 @@ namespace VRSLAM
                     switch (message.action.ToString())
                     {
                         case "download_dependencies":
-                            DependencyDownloader.Download();
+                            DependencyManager.Download();
                             break;
                         case "choose_apk":
                             string[] files = Shared.Window.ShowOpenFile(
@@ -63,9 +90,5 @@ namespace VRSLAM
                 .Load("wwwroot/index.html"); // Can be used with relative path strings or "new URI()" instance to load a website.
                 Shared.Window.WaitForClose(); // Starts the application event loop
         }
-    }
-
-    class Utils {
-
     }
 }

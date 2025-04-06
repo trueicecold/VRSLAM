@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photino for .NET Demo</title>
+    <title>Welcome To VRSLAM</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     
     <link rel="stylesheet" href="https://cdn.metroui.org.ua/current/metro.css">
@@ -12,6 +12,7 @@
     <script src="https://cdn.metroui.org.ua/current/metro.js"></script>
 
     <link rel="stylesheet" href="assets/styles/main.css" />
+    <script src="assets/scripts/managers/page.js"></script>
     <script src="assets/scripts/main.js"></script>
     <script src="assets/scripts/logger.js"></script>
     <script src="assets/scripts/managers/adb.js"></script>
@@ -19,45 +20,32 @@
 <body class="h-100">
     <div class="d-flex flex-row h-100">
         <ul class="sidenav-simple sidenav-simple-expand-fs h-100">
-            <li><a href="#">
+            <li><a href="#home">
                 <span class="mif-apps icon"></span>
                 <span class="title">Home</span>
             </a></li>
-            <li><a href="#">
+            <li><a href="#local_browse">
                 <span class="mif-apps icon"></span>
                 <span class="title">Local Browse</span>
             </a></li>
-            <li><a href="#">
+            <li><a href="#remote_browse">
                 <span class="mif-net-server icon"></span>
                 <span class="title">Remote Browse</span>
             </a></li>
-            <li class="active"><a href="#">
+            <li class="active"><a href="#apk_renamer">
                 <span class="mif-loop icon"></span>
                 <span class="title">APK Renamer</span>
             </a></li>
-            <li><a href="#">
+            <li><a href="#settings">
                 <span class="mif-cog icon"></span>
                 <span class="title">Settings</span>
             </a></li>
         </ul>
-        <div class="pt-3 pl-5 pr-5 pb-2 d-flex flex-column h-100 w-100">
-            <div class="header">APK Renamer</div>
-            <!-- File Selection -->
-            <div class="file_choose_container d-flex justify-content-center pb-3">
-                <input type="text" data-role="input" id="selectedFile" class="mr-3" placeholder="APK Path" readonly/>
-                <button class="file_browse button secondary small" onclick="chooseAPK();">Browse...</button>
-                <button class="button info" onclick="fixAPK();">Fix APK</button>
-            </div>
-
-            <!-- Logger (takes remaining space) -->
-            <div class="flex-grow-1 d-flex h-100">
-                <div class="d-flex justify-content-center align-items-center w-100">
-                    <div class="log p-3 w-100" id="logger">
-                        <!-- Log messages will appear here -->
-                    </div>
+        <div class="d-flex flex-column h-100 w-100">
+            <div class="flex-grow-1 pt-3 pl-5 pr-5 pb-2 d-flex flex-column h-100 w-100">
+                <div class="d-flex flex-column h-100 w-100" id="page_content">
                 </div>
-            </div> 
-            
+            </div>
             <div class="footer d-flex w-100 flex-row pl-3 pr-3">
                 <div>ADB Status:</div>
                 <div class="ml-3" id="device_status">Not Connected</div>
