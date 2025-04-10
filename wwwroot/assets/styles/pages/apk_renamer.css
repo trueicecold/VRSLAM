@@ -1,3 +1,18 @@
+.file_choose_container {
+  position: relative;
+}
+.file_choose_container input {
+  padding-right: 110px;
+}
+.file_choose_container .file_browse {
+  position: absolute;
+  top: 6px;
+  right: 95px;
+  height: 26px;
+  line-height: 12px;
+  padding: 2 10px;
+}
+
 #logger {
   overflow-wrap: anywhere;
   color: #fff;

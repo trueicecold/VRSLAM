@@ -96,15 +96,27 @@ namespace VRSLAM.Libs
                 if (_mountProcess.HasExited)
                 {
                     Console.WriteLine($"RClone exited with code {_mountProcess.ExitCode}");
+                    Shared.Window.SendWebMessage(JSON.Stringify(new {
+                        type = "rclone_mount",
+                        success = false
+                    }));
                     return false;
                 }
 
                 Console.WriteLine($"Successfully mounted {remote} to {mountPoint}");
+                Shared.Window.SendWebMessage(JSON.Stringify(new {
+                    type = "rclone_mount",
+                    success = true
+                }));
                 return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to mount: {ex.Message}");
+                Shared.Window.SendWebMessage(JSON.Stringify(new {
+                    type = "rclone_mount",
+                    success = false
+                }));
                 return false;
             }
         }
@@ -129,6 +141,11 @@ namespace VRSLAM.Libs
                     process.Start();
                     process.WaitForExit();
                     Console.WriteLine("RClone mount process killed successfully.");
+                    if (process.ExitCode != 0)
+                    {
+                        Console.WriteLine($"Failed to kill RClone: {process.StandardError.ReadToEnd()}");
+                        return false;
+                    }
                     return true;
                 }
                 catch (Exception ex)
@@ -168,6 +185,11 @@ namespace VRSLAM.Libs
                 {
                     process.Start();
                     process.WaitForExit();
+                    if (process.ExitCode != 0)
+                    {
+                        return Kill();
+                    }
+                    
                     Console.WriteLine("RClone unmounted successfully.");
                     return true;
                 }

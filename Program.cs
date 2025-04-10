@@ -16,18 +16,20 @@ namespace VRSLAM
         [STAThread]
         static void Main(string[] args)
         {
+            bool isInited = false;
             // Window title declared here for visibility
             string windowTitle = "VSLAM";
 
             // Creating a new PhotinoWindow instance with the fluent API
             Shared.Window = new PhotinoWindow()
                 .SetWebSecurityEnabled(false)
+                .SetFileSystemAccessEnabled(true)
                 .SetTitle(windowTitle)
-                .SetSize(new Size(800, 600))
+                .SetSize(new Size(1600, 600))
                 .Center()
                 .SetResizable(true)
                 .SetMaxSize(1600, 900)
-                .SetMinSize(800, 600);
+                .SetMinSize(1600, 600);
 
             Shared.Window.RegisterCustomSchemeHandler("html", (object sender, string scheme, string url, out string contentType) =>
             {
@@ -73,15 +75,55 @@ namespace VRSLAM
             Shared.Window.RegisterWebMessageReceivedHandler((object sender, string messageStr) =>
                 {
                     dynamic message = JSON.Parse(messageStr);
+                    string htmlContent = string.Empty;
+                    string jsContent = string.Empty;
+                    string cssContent = string.Empty;
 
                     switch (message.action.ToString()) {
                         case "init_managers":
+                            if (isInited) return;
+                            isInited = true;
                             // Init managers interop handlers
                             DependencyManager.InitHandlers();
                             APKManager.InitHandlers();
                             ADBManager.InitHandlers();
                             RCloneManager.InitHandlers();
+                            FileManager.InitHandlers();
                             break;
+                        case "page_files":
+                            if (File.Exists("wwwroot/pages/" + message.pageName + ".html"))
+                            {
+                                htmlContent = File.ReadAllText("wwwroot/pages/" + message.pageName + ".html");
+                            }
+                            else
+                            {
+                                htmlContent = "Page Not Found";
+                            }
+                            if (File.Exists("wwwroot/assets/scripts/pages/" + message.pageName + ".js"))
+                            {
+                                jsContent = File.ReadAllText("wwwroot/assets/scripts/pages/" + message.pageName + ".js");
+                            }
+                            else
+                            {
+                                htmlContent = "";
+                            }
+                            if (File.Exists("wwwroot/assets/styles/pages/" + message.pageName + ".css"))
+                            {
+                                cssContent = File.ReadAllText("wwwroot/assets/styles/pages/" + message.pageName + ".css");
+                            }
+                            else
+                            {
+                                cssContent = "";
+                            }
+                            Shared.Window.SendWebMessage(JSON.Stringify(new {
+                                type = "page_files",
+                                pageName = message.pageName,
+                                html = htmlContent,
+                                js = jsContent,
+                                css = cssContent
+                            }));
+                            break;
+
                     }
                 });
 

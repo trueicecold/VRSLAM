@@ -1,1 +1,38 @@
-﻿<div class="header">Remote Browse</div>
+﻿<!--create a file list item template with different icons for folders and files-->
+<div id="file_list_item_template" class="d-none">
+    <div class="file_list_item d-flex align-items-center" data-type="{{type}}" data-path="{{path}}" onClick="fileAction(this, '{{name}}')">
+        <span class="mif-2x {{icon}}"></span>
+        <span class="ml-2">{{name}}</span>
+        <!--span class="ml-auto">{{size}}</span-->
+    </div>
+</div>
+
+<div class="header">Remote Browse</div>
+<!-- Browser Actions Selection -->
+<div class="files_actions d-flex justify-content-center pb-3">
+    <button class="button primary square rounded" onClick="goBack();"><span class="mif-2x mif-arrow-up"></span></button>
+    <!--button class="button primary square rounded"><span class="mif-2x mif-folder-open"></span></button>
+    <button class="button primary square rounded"><span class="mif-2x mif-pencil"></span></button-->
+    <div id="path"></div>
+</div>
+
+<!-- Files List -->
+<div class="flex-grow-1 d-flex h-100">
+    <div class="d-flex justify-content-center align-items-center w-100">
+        <div class="files_list p-3 w-100" id="files_list">
+            <!-- Log messages will appear here -->
+        </div>
+    </div>
+</div> 
+
+<div class="dialog secondary" data-actions-align="left" data-overlay-click-close="true" data-close-button="true" data-role="dialog" id="install_dialog">
+    <div class="dialog-title">Install APK?</div>
+    <div class="dialog-content">
+        <p>Do you want to install the APK file?</p>
+        <p id="install_apk_name"></p>
+    </div>  
+    <div class="dialog-actions ml-auto">
+        <button class="button primary" id="install_button" onClick="installAPK();">Install</button>
+        <button class="button js-dialog-close" id="cancel_button">Cancel</button>
+    </div>
+</div>

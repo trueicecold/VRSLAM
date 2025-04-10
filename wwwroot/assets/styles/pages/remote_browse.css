@@ -1,0 +1,37 @@
+.files_actions {
+  background-color: #999999;
+  height: 50px;
+  padding-left: 10px;
+}
+.files_actions button {
+  margin-top: 6px;
+  margin-right: 8px;
+}
+
+.files_list {
+  overflow-wrap: anywhere;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  overflow-y: auto;
+  max-height: 100%;
+}
+.files_list .file_list_item {
+  cursor: pointer;
+  cursor: hand;
+  padding-left: 10px;
+  height: 30px;
+  line-height: 30px;
+}
+.files_list .file_list_item:nth-child(odd) {
+  background-color: #444;
+}
+.files_list .file_list_item:nth-child(even) {
+  background-color: #555;
+}
+.files_list .file_list_item:hover {
+  background-color: #666;
+}
+.files_list .file_list_item[disabled] {
+  color: #333 !important;
+}

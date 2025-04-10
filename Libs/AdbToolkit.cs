@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using VRSLAM.Managers;
 
 namespace VRSLAM.Libs
 {
@@ -895,6 +896,34 @@ namespace VRSLAM.Libs
         }
 
         /// <summary>
+        /// Copies a folder from a device to the local machine
+        /// </summary>
+        /// <param name="deviceId">Device ID</param>
+        /// <param name="remotePath">Remote path on device</param>
+        /// <param name="localPath">Local path on local machine</param>
+        /// <returns>True if folder was copied successfully</returns>
+        public bool CopyFolder(string deviceId, string remotePath, string localPath)
+        {
+            try
+            {
+                // Ensure directory exists
+                string directory = Path.GetDirectoryName(localPath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                
+                string output = ExecuteAdbCommand($"-s {deviceId} shell cp -r \"{remotePath}\" \"{localPath}\"");
+                return string.IsNullOrEmpty(output); // Command succeeded if no error output
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred($"Failed to copy folder {remotePath} to {localPath}", $"-s {deviceId} shell cp -r \"{remotePath}\" \"{localPath}\"", ex);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets a list of installed packages on a device
         /// </summary>
         /// <param name="deviceId">Device ID</param>
@@ -1368,6 +1397,21 @@ namespace VRSLAM.Libs
         #endregion
 
         #region Public Methods - Network
+
+
+        public async Task<bool> InstallAPKWeb(string deviceId, string apkPath)
+        {
+            if (apkPath.Contains(AppPath.RCLONE_MOUNT_DIR)) {
+                string FileName = apkPath.Split('/').Last();
+                string FilePath = apkPath.Replace(AppPath.RCLONE_MOUNT_DIR, AppPath.TMP_DIR);
+                Console.WriteLine("Remote Install");
+                await FileManager.CopyFile(apkPath, FilePath, "");
+                FileManager.FileCopyProgress += (id, src, dest, current, total, percent) => {
+                    Console.WriteLine($"Copy progress: {percent}% - {current}/{total} bytes");
+                };
+            }
+            return true;
+        }
 
         /// <summary>
         /// Gets the IP address of a device

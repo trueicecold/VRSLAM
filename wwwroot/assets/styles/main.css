@@ -36,7 +36,7 @@ body {
   color: #fff;
   font-size: 14px;
   line-height: 30px;
-  padding-left: 10px;
+  padding-left: 0px;
 }
 
 .sidenav-simple {
@@ -68,17 +68,30 @@ body {
   font-size: 15px;
 }
 
-.file_choose_container {
-  position: relative;
+.footer_button {
+  margin-top: 3px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 8px;
+  font-size: 13px;
+  background-color: #999999;
 }
-.file_choose_container input {
-  padding-right: 110px;
+.footer_button.success {
+  background-color: #4CAF50 !important;
 }
-.file_choose_container .file_browse {
-  position: absolute;
-  top: 6px;
-  right: 95px;
-  height: 26px;
-  line-height: 12px;
-  padding: 2 10px;
+
+.log {
+  color: #fff;
+  width: 300px;
+  min-height: 100%;
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+#page_content {
+  overflow: hidden;
+}
+
+.flex-grow-1.d-flex.h-100 {
+  min-height: 0; /* This is crucial for nested flex containers */
 }

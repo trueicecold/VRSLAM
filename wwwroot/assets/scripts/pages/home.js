@@ -6,7 +6,7 @@ const init = () => {
                 onCheckDependencies(data.dependencies);
                 break;
         }
-    });
+    }, true);
     
     sendMessage(JSON.stringify({
         action: "check_dependencies"

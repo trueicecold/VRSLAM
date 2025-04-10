@@ -11,9 +11,26 @@ const PageManager = {
     
     // Container element
     container: null,
-    
+    filesContent: {},
     // Initialize the manager
     init(containerId) {
+      receiveMessage(message => {
+        console.log(message);
+        if (message.indexOf("page_files") > -1) console.log(message);
+        const data = JSON.parse(message);
+        switch (data.type) {
+          case "page_files":
+            console.log(data);
+            this.filesContent[data.pageName] = {
+              html: data.html,
+              js: data.js,
+              css: data.css
+            }
+            this.drawPage(data.pageName);
+          break;
+        }
+      });
+
       this.container = document.getElementById(containerId);
       if (!this.container) {
         throw new Error(`Container element #${containerId} not found`);
@@ -24,6 +41,13 @@ const PageManager = {
     
     // Load a page dynamically
     async loadPage(pageName) {
+      window.external.sendMessage(JSON.stringify({
+        action: "page_files",
+        pageName: pageName
+      }));
+    },
+
+    async drawPage(pageName) {
       $("#sidenav li.active").removeClass("active");
       $("#sidenav li[data-page=" + pageName + "]").addClass("active");
 
@@ -32,11 +56,7 @@ const PageManager = {
       
       try {
         // Fetch HTML content
-        const htmlResponse = await fetch((window.external.sendMessage) ? `html://pages/${pageName}.html` : `pages/${pageName}.html`);
-        if (!htmlResponse.ok) {
-          throw new Error(`Failed to load HTML for page: ${pageName}`);
-        }
-        const html = await htmlResponse.text();
+        const html = this.filesContent[pageName].html;
         
         // Render the HTML
         $(this.container).html(html);
@@ -89,35 +109,32 @@ const PageManager = {
         // Load and execute the page's JavaScript
         try {
           // Fetch JS module
-          const jsResponse = await fetch((window.external.sendMessage) ? `js://assets/scripts/pages/${pageName}.js` : `scripts/pages/${pageName}.js`);
-          if (jsResponse.ok) {
-            const jsCode = await jsResponse.text();
+          const jsCode = this.filesContent[pageName].js;
             
-            // Create a function that will execute in the context of the page
-            const pageModuleFunc = new Function('page', `
-              // Code wrapper for page scripts
-              return (function() {
-                ${jsCode}
-                
-                // Return any exported lifecycle hooks
-                return {
-                  init: typeof init === 'function' ? init : null,
-                  cleanup: typeof cleanup === 'function' ? cleanup : null
-                };
-              })();
-            `);
-            
-            // Execute the page module with the page context
-            const pageModule = pageModuleFunc(pageContext);
-            
-            // Store references to lifecycle hooks
-            pageContext.initFunc = pageModule.init;
-            pageContext.cleanupFunc = pageModule.cleanup;
-            
-            // Call init function if provided
-            if (pageContext.initFunc) {
-              await pageContext.initFunc.call(pageContext);
-            }
+          // Create a function that will execute in the context of the page
+          const pageModuleFunc = new Function('page', `
+            // Code wrapper for page scripts
+            return (function() {
+              ${jsCode}
+              
+              // Return any exported lifecycle hooks
+              return {
+                init: typeof init === 'function' ? init : null,
+                cleanup: typeof cleanup === 'function' ? cleanup : null
+              };
+            })();
+          `);
+          
+          // Execute the page module with the page context
+          const pageModule = pageModuleFunc(pageContext);
+          
+          // Store references to lifecycle hooks
+          pageContext.initFunc = pageModule.init;
+          pageContext.cleanupFunc = pageModule.cleanup;
+          
+          // Call init function if provided
+          if (pageContext.initFunc) {
+            await pageContext.initFunc.call(pageContext);
           }
         } catch (jsError) {
           console.error(`Error loading or executing JavaScript for ${pageName}:`, jsError);
@@ -125,13 +142,10 @@ const PageManager = {
 
         // Load and execute the page's css
         try {
-          const cssResponse = await fetch((window.external.sendMessage) ? `css://assets/styles/pages/${pageName}.css` : `assets/styles/pages/${pageName}.css`);
-          if (cssResponse.ok) {
-            const cssCode = await cssResponse.text();
-            const styleElement = document.createElement('style');
-            styleElement.textContent = cssCode;
-            $(this.container).append(styleElement);
-          }
+          const cssCode = this.filesContent[pageName].css;
+          const styleElement = document.createElement('style');
+          styleElement.textContent = cssCode;
+          $(this.container).append(styleElement);
         } catch (cssError) {
           console.error(`Error loading CSS for ${pageName}:`, cssError);
         }
@@ -147,7 +161,7 @@ const PageManager = {
     // Unload the current page
     async unloadCurrentPage() {
       if (!this.current) return Promise.resolve();
-      
+      window.external.clearPageEvents();
       try {
         // Call cleanup function if provided
         if (this.current.cleanupFunc) {

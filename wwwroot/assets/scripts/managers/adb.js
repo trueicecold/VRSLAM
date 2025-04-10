@@ -17,15 +17,17 @@ const ADBManager  = {
         }
     },
 
+    deviceId: null,
+    
     onDeviceConnected: (device, info) => {
         try {
-            console.log(device);
             if (device) {
+                deviceId = device.id;
                 if (info) {
                     info = JSON.parse(info);
                 }
                 $("#device_storage_container").addClass("d-flex").removeClass("d-none");
-                $("#device_status").removeClass("bg-charcoal").addClass("bg-green").html("Connected");
+                $("#device_status").addClass("success").html("Device Connected");
                 $("#device_storage").html(info?.storage.Available + " / " + info?.storage.Total);
             }
         }
@@ -33,8 +35,7 @@ const ADBManager  = {
         }
     },
     onDeviceDisconnected: () => {
-        console.log("Disconnected");
-        $("#device_status").removeClass("bg-green").addClass("bg-charcoal").html("Not Connected");
+        $("#device_status").removeClass("success").html("Device Disconnected");
         $("#device_storage_container").addClass("d-none").removeClass("d-flex");
     }
 }
