@@ -1,25 +1,3 @@
-window.__receiveMessageCallbacks = [];
-window.external.event_id = 0;
-window.__dispatchMessageCallback = (message) => {
-    window.__receiveMessageCallbacks.forEach((callback) => {
-        callback.callback(message);
-    });
-}
-
-window.external.receiveMessage = (callback, page) => {
-    if (!window.__receiveMessageCallbacks.find(clb => clb.toString() == callback.toString())) {
-        window.__receiveMessageCallbacks.push({
-            callback: callback,
-            id: window.external.event_id++,
-            is_page: page
-        });
-    }
-}
-
-window.external.clearPageEvents = () => {
-    window.__receiveMessageCallbacks = window.__receiveMessageCallbacks.filter(clb => !clb.is_page);
-}
-
 $(document).ready(function () {
     Logger.init();
     ADBManager.init();
@@ -47,11 +25,20 @@ const sendMessage = (message) => {
     }
 }
 
+let webMessaageHandlers = [];
+window.external.receiveMessage((message) => {
+    webMessaageHandlers.forEach(handler => {
+        if (!handler.is_page || handler.is_page == PageManager.current_name) {
+            handler.callback(message);
+        }
+    });
+});
+
 const receiveMessage = (callback, page) => {
-    if (window.external && window.external.receiveMessage) {
-        window.external.receiveMessage(callback, page);
+    if (!webMessaageHandlers.find(clb => clb.callback.toString() == callback.toString())) {
+        webMessaageHandlers.push({
+            callback: callback,
+            is_page: (page ? PageManager.current_name : null)
+        });
     }
-    else {
-        console.warn("receiveMessage is not defined");
-    }   
 }
