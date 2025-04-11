@@ -22,6 +22,8 @@ namespace VRSLAM.Libs
             System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.X86;
         public static bool IS_WINDOWS_64 = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) && 
             System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.X64;
+        public static bool IS_WINDOWS_ARM64 = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) &&
+            System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64;
         public static bool IS_LINUX_32 = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) && 
             System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.X86;
         public static bool IS_LINUX_64 = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) && 
@@ -32,6 +34,7 @@ namespace VRSLAM.Libs
         public static string JDK_URL = 
             IS_WINDOWS_32 ? "https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-win_i686.zip" : 
             IS_WINDOWS_64 ? "https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-win_x64.zip" :
+            IS_WINDOWS_ARM64 ? "https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-win_aarch64.zip" : 
             IS_MAC_64 ? "https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.zip" :
             IS_MAC_ARM64 ? "https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_aarch64.zip" :
             IS_LINUX_32 ? "https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-linux_i686.zip" :
@@ -40,6 +43,7 @@ namespace VRSLAM.Libs
         public static string PLATFORM_TOOLS_URL = 
             IS_WINDOWS_32 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-windows.zip" :
             IS_WINDOWS_64 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-windows.zip" :
+            IS_WINDOWS_ARM64 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-windows.zip" :
             IS_MAC_64 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-darwin.zip" :
             IS_MAC_ARM64 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-darwin.zip" :
             IS_LINUX_32 ? "https://dl.google.com/android/repository/platform-tools_r34.0.1-linux.zip" :
@@ -48,6 +52,7 @@ namespace VRSLAM.Libs
         public static string RCLONE_URL = 
             IS_WINDOWS_32 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-windows-386.zip" :
             IS_WINDOWS_64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-windows-amd64.zip" :
+            IS_WINDOWS_ARM64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-windows-arm64.zip" :
             IS_MAC_64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-osx-amd64.zip" :
             IS_MAC_ARM64 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-osx-arm64.zip" :
             IS_LINUX_32 ? "https://downloads.rclone.org/v1.69.1/rclone-v1.69.1-linux-386.zip" :
